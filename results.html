@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Analyzer · Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a2e;
+    --ink2: #16213e;
+    --paper: #f5f0e8;
+    --paper2: #ede8df;
+    --accent: #c84b31;
+    --accent2: #2d6a4f;
+    --accent3: #8b5e3c;
+    --rule: #c8c0b0;
+    --text: #2c2c3e;
+    --muted: #7a7060;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--ink);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: radial-gradient(circle, rgba(200,75,49,0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  header {
+    background: var(--ink2);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 15px; font-weight: 600;
+    color: var(--paper); letter-spacing: -0.5px;
+  }
+  .logo .slash { color: var(--accent); margin: 0 4px; }
+
+  .nav { display: flex; gap: 4px; }
+  .nav a {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none;
+    padding: 6px 16px; border-radius: 2px; color: rgba(245,240,232,0.5);
+    transition: all 0.15s;
+  }
+  .nav a.active { background: var(--accent); color: #fff; }
+  .nav a:hover:not(.active) { color: var(--paper); background: rgba(255,255,255,0.07); }
+
+  .main { max-width: 1300px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 80px 24px;
+  }
+  .empty-state .icon { font-size: 52px; margin-bottom: 20px; }
+  .empty-state h2 {
+    font-size: 22px; font-weight: 700; color: var(--paper);
+    margin-bottom: 10px;
+  }
+  .empty-state p {
+    font-family: var(--mono); font-size: 12px;
+    color: rgba(245,240,232,0.4); margin-bottom: 24px; line-height: 2;
+  }
+
+  /* Top bar */
+  .top-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .btn {
+    padding: 10px 20px; border-radius: 2px; border: none;
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    transition: all 0.15s; display: inline-flex;
+    align-items: center; gap: 7px; text-decoration: none;
+    position: relative;
+  }
+  .btn-primary { background: var(--ink2); color: var(--paper); border: 1px solid rgba(245,240,232,0.15); }
+  .btn-primary:hover { background: var(--accent); border-color: var(--accent); transform: translate(-2px,-2px); box-shadow: 3px 3px 0 rgba(245,240,232,0.1); }
+  .btn-dl { background: transparent; color: rgba(245,240,232,0.6); border: 1px solid rgba(245,240,232,0.15); }
+  .btn-dl:hover { color: var(--paper); border-color: rgba(245,240,232,0.4); }
+  .timestamp { font-family: var(--mono); font-size: 10px; color: rgba(245,240,232,0.3); margin-left: auto; letter-spacing: 1px; }
+
+  /* Report banner */
+  .report-banner {
+    background: var(--paper);
+    border-radius: 2px;
+    padding: 0;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(200,75,49,0.2);
+  }
+  .report-banner-strip {
+    height: 4px; background: var(--accent);
+  }
+  .report-banner-body {
+    padding: 22px 28px;
+    display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .report-title {
+    font-size: 22px; font-weight: 700;
+    color: var(--text); letter-spacing: -0.5px;
+  }
+  .report-title span { color: var(--accent); }
+  .report-meta {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--muted); line-height: 2; text-align: right;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--paper);
+    border-radius: 2px;
+    padding: 20px;
+    border-left: 3px solid var(--accent);
+    box-shadow: 3px 3px 0 rgba(200,75,49,0.12);
+  }
+  .stat-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 30px; font-weight: 700; color: var(--text); line-height: 1;
+    font-family: var(--sans);
+  }
+  .stat-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 5px; }
+
+  /* Two-col highlight */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+
+  .highlight-card {
+    background: var(--paper);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 3px 3px 0 rgba(200,75,49,0.12);
+  }
+  .highlight-card-header {
+    background: var(--paper2);
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .highlight-card-body { padding: 16px 18px; }
+  .highlight-type { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .highlight-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  /* Section */
+  .section {
+    background: var(--paper);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 3px 3px 0 rgba(200,75,49,0.1);
+  }
+  .section-header {
+    background: var(--paper2);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-num {
+    background: var(--accent); color: #fff;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 2px;
+  }
+  .section-title {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text);
+  }
+  .section-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-left: auto; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th {
+    background: var(--paper2);
+    padding: 9px 16px; text-align: left;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(200,192,176,0.4);
+    vertical-align: middle;
+    color: var(--text);
+    font-family: var(--mono); font-size: 12px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(200,75,49,0.03); }
+
+  /* Badges */
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 2px; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.5px; font-family: var(--mono);
+  }
+  .badge-KEYWORD { background: rgba(139,94,60,0.15); color: var(--accent3); border: 1px solid rgba(139,94,60,0.25); }
+  .badge-IDENTIFIER { background: rgba(200,75,49,0.12); color: var(--accent); border: 1px solid rgba(200,75,49,0.2); }
+  .badge-LITERAL { background: rgba(45,106,79,0.12); color: var(--accent2); border: 1px solid rgba(45,106,79,0.2); }
+  .badge-OPERATOR { background: rgba(26,26,46,0.08); color: var(--ink); border: 1px solid rgba(26,26,46,0.2); }
+  .badge-SEPARATOR { background: rgba(122,112,96,0.15); color: var(--muted); border: 1px solid rgba(122,112,96,0.25); }
+  .badge-COMMENT { background: rgba(122,112,96,0.1); color: var(--muted); border: 1px solid rgba(122,112,96,0.15); }
+
+  .qty-cell { color: var(--accent); font-weight: 600; }
+  .pct-cell { color: var(--accent3); }
+  .lines-cell { color: var(--muted); font-size: 11px; max-width: 200px; word-break: break-all; }
+  .token-type-cell { color: var(--text); }
+
+  /* Bar chart */
+  .bar-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 20px;
+  }
+  .bar-row:not(:last-child) { border-bottom: 1px solid rgba(200,192,176,0.4); }
+  .bar-label { width: 110px; flex-shrink: 0; }
+  .bar-track {
+    flex: 1; height: 6px;
+    background: var(--paper2);
+    border-radius: 1px; overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .bar-fill {
+    height: 100%; border-radius: 1px; width: 0;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+  .bar-val { width: 100px; text-align: right; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  #results { animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Token<span class="slash">/</span>Analyzer</div>
+  <nav class="nav">
+    <a href="upload.html">Upload</a>
+    <a href="results.html" class="active">Results</a>
+  </nav>
+</header>
+
+<div class="main">
+  <div id="results"></div>
+</div>
+
+<script>
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderReport(stats, filename) {
+  const { tokens, total, totalLines, codeLines, typeMap, lineTokens, identMap, litMap, catTotals,
+    maxLine, minLine, mostFreqType, leastFreqType, avgPerLine } = stats;
+
+  const pct = (n) => total > 0 ? ((n/total)*100).toFixed(2)+'%' : '0.00%';
+  const linesList = (arr) => [...arr].sort((a,b)=>a-b).join(', ');
+
+  const categories = ['KEYWORD','IDENTIFIER','LITERAL','OPERATOR','SEPARATOR','COMMENT'];
+  let tableRows = '';
+  categories.forEach(cat => {
+    const entries = Object.entries(typeMap).filter(([k,v]) => v.category === cat);
+    if (!entries.length) {
+      tableRows += `<tr>
+        <td><span class="badge badge-${cat}">${cat}</span></td>
+        <td class="token-type-cell">—</td>
+        <td class="qty-cell">0</td><td class="pct-cell">0.00%</td>
+        <td class="lines-cell">(none)</td>
+      </tr>`;
+      return;
+    }
+    entries.forEach(([type, data], idx) => {
+      tableRows += `<tr>
+        ${idx === 0 ? `<td rowspan="${entries.length}"><span class="badge badge-${cat}">${cat}</span></td>` : ''}
+        <td class="token-type-cell">${type}</td>
+        <td class="qty-cell">${data.count}</td>
+        <td class="pct-cell">${pct(data.count)}</td>
+        <td class="lines-cell">${linesList(data.lines)}</td>
+      </tr>`;
+    });
+  });
+
+  let lineRows = '';
+  const sortedLines = Object.entries(lineTokens).sort((a,b)=>+a[0]-+b[0]);
+  sortedLines.forEach(([ln, cnt]) => {
+    const w = Math.round((cnt / (maxLine.count||1)) * 100);
+    lineRows += `<tr>
+      <td style="color:var(--muted)">${ln}</td>
+      <td class="qty-cell">${cnt}</td>
+      <td style="padding: 10px 16px">
+        <div style="height:5px;width:${w}%;background:var(--accent);border-radius:1px;max-width:300px;transition:width 0.6s ease"></div>
+      </td>
+    </tr>`;
+  });
+
+  let identRows = '';
+  Object.entries(identMap).sort((a,b)=>b[1].count-a[1].count).forEach(([name, data]) => {
+    identRows += `<tr>
+      <td style="color:var(--accent);font-weight:500">${escHtml(name)}</td>
+      <td class="qty-cell">${data.count}</td>
+      <td class="lines-cell">${linesList(data.lines)}</td>
+    </tr>`;
+  });
+
+  let litRows = '';
+  Object.values(litMap).sort((a,b)=>b.count-a.count).forEach(data => {
+    litRows += `<tr>
+      <td style="color:var(--text);font-weight:500">${escHtml(data.value)}</td>
+      <td><span class="badge badge-LITERAL" style="font-size:9px">${data.type.replace('LITERAL_','')}</span></td>
+      <td class="qty-cell">${data.count}</td>
+      <td class="lines-cell">${linesList(data.lines)}</td>
+    </tr>`;
+  });
+
+  const catColors = {
+    KEYWORD:'var(--accent3)',IDENTIFIER:'var(--accent)',LITERAL:'var(--accent2)',
+    OPERATOR:'var(--ink)',SEPARATOR:'var(--muted)',COMMENT:'#b0a898'
+  };
+  let catBars = '';
+  const maxCat = Math.max(...categories.map(c=>catTotals[c]||0));
+  categories.forEach(cat => {
+    const cnt = catTotals[cat] || 0;
+    const w = maxCat>0?Math.round((cnt/maxCat)*100):0;
+    catBars += `<div class="bar-row">
+      <div class="bar-label"><span class="badge badge-${cat}">${cat}</span></div>
+      <div class="bar-track"><div class="bar-fill" data-width="${w}" style="background:${catColors[cat]}"></div></div>
+      <div class="bar-val">${cnt} <span style="color:var(--muted)">(${pct(cnt)})</span></div>
+    </div>`;
+  });
+
+  const now = new Date();
+  const ts = now.toLocaleString();
+
+  return `
+  <div class="top-bar">
+    <a href="upload.html" class="btn btn-primary">← Back</a>
+    <button class="btn btn-dl" onclick="downloadReport()">↓ Download .txt</button>
+    <span class="timestamp">Generated: ${ts}</span>
+  </div>
+
+  <div class="report-banner">
+    <div class="report-banner-strip"></div>
+    <div class="report-banner-body">
+      <div>
+        <div class="report-title">W<span>++</span> Token Analyzer — Statistical Report</div>
+      </div>
+      <div class="report-meta">
+        FILE: ${escHtml(filename)}<br>
+        TOTAL LINES: ${totalLines} &nbsp;·&nbsp; CODE LINES: ${codeLines}<br>
+        TOTAL TOKENS: ${total}
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Tokens</div>
+      <div class="stat-value">${total}</div>
+    </div>
+    <div class="stat-card" style="border-left-color:var(--accent3)">
+      <div class="stat-label">Unique Types</div>
+      <div class="stat-value">${Object.keys(typeMap).length}</div>
+    </div>
+    <div class="stat-card" style="border-left-color:var(--accent2)">
+      <div class="stat-label">Code Lines</div>
+      <div class="stat-value">${codeLines}</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#8b5e3c">
+      <div class="stat-label">Avg / Line</div>
+      <div class="stat-value">${avgPerLine}</div>
+    </div>
+    <div class="stat-card" style="border-left-color:var(--accent)">
+      <div class="stat-label">Max Tokens</div>
+      <div class="stat-value">${maxLine.count}</div>
+      <div class="stat-sub">Line ${maxLine.line}</div>
+    </div>
+    <div class="stat-card" style="border-left-color:var(--accent2)">
+      <div class="stat-label">Min Tokens</div>
+      <div class="stat-value">${minLine.count}</div>
+      <div class="stat-sub">Line ${minLine.line}</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="highlight-card">
+      <div class="highlight-card-header">🔥 Most Frequent Token</div>
+      <div class="highlight-card-body">
+        <div class="highlight-type">${mostFreqType?.type||'—'}</div>
+        <div class="highlight-sub">${mostFreqType?.count||0} occurrences · ${pct(mostFreqType?.count||0)}</div>
+      </div>
+    </div>
+    <div class="highlight-card">
+      <div class="highlight-card-header">❄️ Least Frequent Token</div>
+      <div class="highlight-card-body">
+        <div class="highlight-type">${leastFreqType?.type||'—'}</div>
+        <div class="highlight-sub">${leastFreqType?.count||0} occurrence(s) · ${pct(leastFreqType?.count||0)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-title">Token Type Summary</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Category</th><th>Token Type</th><th>Qty</th><th>%</th><th>Lines</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-title">Line-wise Distribution</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Line #</th><th>Token Count</th><th>Distribution</th></tr></thead>
+        <tbody>${lineRows}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-title">Identifier Statistics</span>
+      <span class="section-sub">${Object.keys(identMap).length} unique</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Identifier</th><th>Frequency</th><th>Lines</th></tr></thead>
+        <tbody>${identRows||'<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:20px">No identifiers found</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-title">Literal Statistics</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Literal Value</th><th>Type</th><th>Frequency</th><th>Lines</th></tr></thead>
+        <tbody>${litRows||'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No literals found</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-title">Category Breakdown</span>
+    </div>
+    <div style="padding: 8px 0">
+      ${catBars}
+    </div>
+  </div>
+  `;
+}
+
+const resultsDiv = document.getElementById('results');
+const rawStats = localStorage.getItem('wpp_stats');
+const filename = localStorage.getItem('wpp_filename') || 'input.wpp';
+
+if (!rawStats) {
+  resultsDiv.innerHTML = `
+    <div class="empty-state">
+      <div class="icon">📊</div>
+      <h2>No Analysis Data</h2>
+      <p>// No results yet. Upload W++ code and run analysis first.</p>
+      <a href="upload.html" class="btn btn-primary">← Go to Upload</a>
+    </div>`;
+} else {
+  const stats = JSON.parse(rawStats);
+  resultsDiv.innerHTML = renderReport(stats, filename);
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(b => {
+      b.style.width = b.getAttribute('data-width') + '%';
+    });
+  }, 150);
+}
+
+function downloadReport() {
+  const rawStats = localStorage.getItem('wpp_stats');
+  if (!rawStats) return;
+  const stats = JSON.parse(rawStats);
+  const filename = localStorage.getItem('wpp_filename') || 'input.wpp';
+  const { total, totalLines, codeLines, typeMap, lineTokens, identMap, litMap, catTotals,
+    maxLine, minLine, mostFreqType, leastFreqType, avgPerLine } = stats;
+
+  const pct = (n) => total>0?((n/total)*100).toFixed(2)+'%':'0.00%';
+  const linesList = (arr) => [...arr].sort((a,b)=>a-b).join(', ');
+  const sep='='.repeat(78);
+  const sep2='-'.repeat(78);
+
+  let r=`${sep}\n                   W++ TOKEN ANALYZER - STATISTICAL REPORT\n${sep}\n\n`;
+  r+=`INPUT FILE: ${filename}\nTOTAL LINES: ${totalLines}\nLINES WITH CODE: ${codeLines}\nTOTAL TOKENS: ${total}\n\n`;
+
+  r+=`${sep}\n1. TOKEN TYPE SUMMARY\n${sep}\n\n`;
+  r+=`Category         | Token Type              | Qty | %      | Lines\n${sep2}\n`;
+  ['KEYWORD','IDENTIFIER','LITERAL','OPERATOR','SEPARATOR','COMMENT'].forEach(cat=>{
+    const entries=Object.entries(typeMap).filter(([k,v])=>v.category===cat);
+    if(!entries.length){r+=`${cat.padEnd(16)} | ${'—'.padEnd(23)} | 0   | 0.00%  | (none)\n`;return;}
+    entries.forEach(([type,data])=>{
+      r+=`${cat.padEnd(16)} | ${type.padEnd(23)} | ${String(data.count).padEnd(3)} | ${pct(data.count).padEnd(6)} | ${linesList(data.lines)}\n`;
+    });
+  });
+
+  r+=`\n${sep}\n2. LINE-WISE TOKEN DISTRIBUTION\n${sep}\n\n`;
+  r+=`Line # | Token Count\n${sep2}\n`;
+  Object.entries(lineTokens).sort((a,b)=>+a[0]-+b[0]).forEach(([ln,cnt])=>{
+    r+=`${String(ln).padEnd(6)} | ${cnt}\n`;
+  });
+
+  r+=`\n${sep}\n3. IDENTIFIER STATISTICS\n${sep}\n\n`;
+  r+=`Identifier           | Frequency | Lines\n${sep2}\n`;
+  Object.entries(identMap).sort((a,b)=>b[1].count-a[1].count).forEach(([name,data])=>{
+    r+=`${name.padEnd(20)} | ${String(data.count).padEnd(9)} | ${linesList(data.lines)}\n`;
+  });
+
+  r+=`\n${sep}\n4. LITERAL STATISTICS\n${sep}\n\n`;
+  r+=`Literal              | Type    | Frequency | Lines\n${sep2}\n`;
+  Object.values(litMap).sort((a,b)=>b.count-a.count).forEach(data=>{
+    r+=`${String(data.value).padEnd(20)} | ${data.type.replace('LITERAL_','').padEnd(7)} | ${String(data.count).padEnd(9)} | ${linesList(data.lines)}\n`;
+  });
+
+  r+=`\n${sep}\n5. TOKEN SUMMARY STATISTICS\n${sep}\n\n`;
+  r+=`Total Tokens: ${total}\nUnique Token Types: ${Object.keys(typeMap).length}\nTotal Lines with Code: ${codeLines}\n`;
+  r+=`\nMost Frequent Token: ${mostFreqType?.type} (${mostFreqType?.count} occurrences, ${pct(mostFreqType?.count)})\n`;
+  r+=`Least Frequent Token: ${leastFreqType?.type} (${leastFreqType?.count} occurrence(s), ${pct(leastFreqType?.count)})\n\n`;
+  r+=`Average Tokens per Line: ${avgPerLine}\nMaximum Tokens in a Single Line: ${maxLine.count} (Line ${maxLine.line})\nMinimum Tokens in a Single Line: ${minLine.count} (Line ${minLine.line})\n`;
+
+  r+=`\n${sep}\n6. TOKEN CATEGORY BREAKDOWN\n${sep}\n\n`;
+  r+=`Category         | Total | Percentage\n${sep2}\n`;
+  ['KEYWORD','IDENTIFIER','LITERAL','OPERATOR','SEPARATOR','COMMENT'].forEach(cat=>{
+    const cnt=catTotals[cat]||0;
+    r+=`${cat.padEnd(16)} | ${String(cnt).padEnd(5)} | ${pct(cnt)}\n`;
+  });
+
+  r+=`\n${sep}\nEND OF REPORT\n${sep}\n`;
+
+  const blob=new Blob([r],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='wpp_token_report.txt';
+  a.click();
+}
+</script>
+</body>
+</html>

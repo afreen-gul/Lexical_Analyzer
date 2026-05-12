@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Analyzer · Upload</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1a2e;
+    --ink2: #16213e;
+    --paper: #f5f0e8;
+    --paper2: #ede8df;
+    --accent: #c84b31;
+    --accent2: #2d6a4f;
+    --rule: #c8c0b0;
+    --text: #2c2c3e;
+    --muted: #7a7060;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--ink);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: radial-gradient(circle, rgba(200,75,49,0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  header {
+    background: var(--ink2);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 40px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--paper);
+    letter-spacing: -0.5px;
+  }
+  .logo .slash { color: var(--accent); margin: 0 4px; }
+
+  .nav {
+    display: flex; gap: 4px;
+  }
+  .nav a {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 6px 16px;
+    border-radius: 2px;
+    color: rgba(245,240,232,0.5);
+    transition: all 0.15s;
+  }
+  .nav a.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .nav a:hover:not(.active) {
+    color: var(--paper);
+    background: rgba(255,255,255,0.07);
+  }
+
+  .main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* Page heading */
+  .page-heading {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(245,240,232,0.1);
+  }
+  .breadcrumb {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .page-heading h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--paper);
+    letter-spacing: -0.5px;
+  }
+  .page-heading p {
+    font-size: 13px;
+    color: rgba(245,240,232,0.45);
+    margin-top: 6px;
+    font-family: var(--mono);
+  }
+
+  /* Card wrapper */
+  .card {
+    background: var(--paper);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 rgba(200,75,49,0.25);
+    margin-bottom: 16px;
+  }
+
+  .card-strip {
+    height: 4px;
+    background: var(--accent);
+  }
+
+  .card-inner {
+    padding: 28px 32px;
+  }
+
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--rule);
+    border-radius: 2px;
+    padding: 36px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--paper2);
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .upload-zone input {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: #f0e8dc;
+  }
+  .upload-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .upload-zone h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .upload-zone p {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .file-badge {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(45,106,79,0.1);
+    border: 1px solid rgba(45,106,79,0.3);
+    border-radius: 2px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+  .file-badge.show { display: flex; }
+  .remove-file { cursor: pointer; color: var(--muted); margin-left: auto; transition: color 0.15s; }
+  .remove-file:hover { color: var(--accent); }
+
+  /* Divider */
+  .or-divider {
+    display: flex; align-items: center; gap: 14px;
+    margin: 18px 0;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .or-divider::before, .or-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--rule);
+  }
+
+  /* Textarea */
+  .textarea-wrap { position: relative; }
+  textarea {
+    width: 100%;
+    background: var(--paper2);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 16px;
+    padding-bottom: 34px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 220px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,75,49,0.1);
+  }
+  .char-count {
+    position: absolute; bottom: 10px; right: 12px;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--muted); pointer-events: none;
+  }
+
+  /* Error */
+  .error-box {
+    background: rgba(200,75,49,0.1);
+    border: 1px solid rgba(200,75,49,0.4);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    border-radius: 0 2px 2px 0;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 2px;
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--accent);
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .btn-primary:active { transform: translate(0,0); box-shadow: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--rule);
+  }
+  .btn-ghost:hover {
+    border-color: var(--text);
+    background: var(--paper2);
+  }
+
+  .sample-link {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    margin-left: auto;
+    transition: color 0.15s;
+  }
+  .sample-link:hover { color: var(--accent); }
+
+  /* Info card */
+  .info-card {
+    background: var(--ink2);
+    border: 1px solid rgba(245,240,232,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 2px 2px 0;
+    padding: 16px 20px;
+  }
+  .info-card p {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: rgba(245,240,232,0.5);
+    line-height: 1.9;
+  }
+  .info-card strong { color: rgba(245,240,232,0.8); }
+
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,26,46,0.93);
+    display: none; align-items: center;
+    justify-content: center; flex-direction: column;
+    gap: 20px; z-index: 999;
+  }
+  .loading-overlay.show { display: flex; }
+  .loader-bar {
+    width: 200px; height: 2px;
+    background: rgba(245,240,232,0.1);
+    border-radius: 1px; overflow: hidden;
+  }
+  .loader-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    animation: loadBar 0.7s ease-in-out infinite alternate;
+  }
+  @keyframes loadBar {
+    from { width: 20%; margin-left: 0; }
+    to { width: 60%; margin-left: 40%; }
+  }
+  .loading-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: rgba(245,240,232,0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Token<span class="slash">/</span>Analyzer</div>
+  <nav class="nav">
+    <a href="upload.html" class="active">Upload</a>
+    <a href="results.html">Results</a>
+  </nav>
+</header>
+
+<div class="main">
+  <div class="page-heading">
+    <div class="breadcrumb">Step 01 of 02</div>
+    <h1>Upload W++ Source</h1>
+    <p>// Drop a .wpp file or paste code · Ctrl+Enter to analyze</p>
+  </div>
+
+  <div class="card">
+    <div class="card-strip"></div>
+    <div class="card-inner">
+      <span class="field-label">Source File</span>
+
+      <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".wpp,.txt">
+        <div class="upload-icon">📂</div>
+        <h3>Drop .wpp file here</h3>
+        <p>or click to browse &nbsp;·&nbsp; Accepts .wpp and .txt</p>
+      </div>
+
+      <div class="file-badge" id="fileBadge">
+        <span>📄</span>
+        <span id="fileNameLabel"></span>
+        <span class="remove-file" onclick="removeFile()" title="Remove">✕</span>
+      </div>
+
+      <div class="or-divider">or paste directly</div>
+
+      <span class="field-label">W++ Source Code</span>
+      <div class="textarea-wrap">
+        <textarea id="codeInput" placeholder="// Paste your W++ code here
+int main() {
+    int x = 10;
+    return 0;
+}"></textarea>
+        <div class="char-count" id="charCount">0 chars</div>
+      </div>
+
+      <div id="errorBox" class="error-box"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="analyze()">⚡ Analyze</button>
+        <button class="btn btn-ghost" onclick="clearAll()">✕ Clear</button>
+        <span class="sample-link" onclick="loadSample()">▶ load sample</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <p>
+      <strong>How it works:</strong> Your W++ code is tokenized client-side using the W++ grammar rules.
+      Results show full statistics — token type summary, line-wise distribution, identifier &amp; literal analysis.
+      <strong>No data is sent to any server.</strong>
+    </p>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-text">Tokenizing…</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+</div>
+
+<script>
+const KEYWORDS = new Set(['int','float','double','char','string','if','else','while','for',
+  'return','print','read','true','false','bool','void','main','null']);
+
+const OPERATORS = {
+  '<=':'OPERATOR_LTE','>=':'OPERATOR_GTE','==':'OPERATOR_EQ','!=':'OPERATOR_NEQ',
+  '&&':'OPERATOR_AND','||':'OPERATOR_OR','=':'OPERATOR_ASSIGN','+':'OPERATOR_PLUS',
+  '-':'OPERATOR_MINUS','*':'OPERATOR_MULT','/':'OPERATOR_DIV','<':'OPERATOR_LT',
+  '>':'OPERATOR_GT','%':'OPERATOR_MOD','!':'OPERATOR_NOT','++':'OPERATOR_INC','--':'OPERATOR_DEC'
+};
+
+const SEPARATORS = {
+  ';':'SEPARATOR_SEMICOLON',',':'SEPARATOR_COMMA','(':'SEPARATOR_LPAREN',')':'SEPARATOR_RPAREN',
+  '{':'SEPARATOR_LBRACE','}':'SEPARATOR_RBRACE','[':'SEPARATOR_LBRACKET',']':'SEPARATOR_RBRACKET'
+};
+
+function tokenize(source) {
+  const tokens = [];
+  const lines = source.split('\n');
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const line = lines[lineIdx];
+    const lineNum = lineIdx + 1;
+    let i = 0;
+    while (i < line.length) {
+      if (/\s/.test(line[i])) { i++; continue; }
+      if (line[i]==='/'&&line[i+1]==='/') {
+        tokens.push({category:'COMMENT',type:'COMMENT',value:line.slice(i),line:lineNum}); break;
+      }
+      if (line[i]==='"') {
+        let j=i+1;
+        while(j<line.length&&!(line[j]==='"'&&line[j-1]!=='\\'))j++;
+        tokens.push({category:'LITERAL',type:'LITERAL_STRING',value:line.slice(i,j+1),line:lineNum});
+        i=j+1; continue;
+      }
+      if (line[i]==="'") {
+        let j=i+1;
+        if(line[j]==='\\')j+=2;else j++;
+        if(line[j]==="'")j++;
+        tokens.push({category:'LITERAL',type:'LITERAL_CHAR',value:line.slice(i,j),line:lineNum});
+        i=j; continue;
+      }
+      if (/[0-9]/.test(line[i])||(line[i]==='-'&&/[0-9]/.test(line[i+1])&&(tokens.length===0||['OPERATOR','SEPARATOR'].includes(tokens[tokens.length-1]?.category)))) {
+        let j=i; if(line[j]==='-')j++;
+        while(j<line.length&&/[0-9]/.test(line[j]))j++;
+        let isFloat=false;
+        if(j<line.length&&line[j]==='.'&&/[0-9]/.test(line[j+1])){isFloat=true;j++;while(j<line.length&&/[0-9]/.test(line[j]))j++;}
+        tokens.push({category:'LITERAL',type:isFloat?'LITERAL_FLOAT':'LITERAL_INTEGER',value:line.slice(i,j),line:lineNum});
+        i=j; continue;
+      }
+      if (/[a-zA-Z_]/.test(line[i])) {
+        let j=i;
+        while(j<line.length&&/[a-zA-Z0-9_]/.test(line[j]))j++;
+        const val=line.slice(i,j);
+        tokens.push(KEYWORDS.has(val)
+          ?{category:'KEYWORD',type:'KEYWORD_'+val.toUpperCase(),value:val,line:lineNum}
+          :{category:'IDENTIFIER',type:'IDENTIFIER',value:val,line:lineNum});
+        i=j; continue;
+      }
+      const two=line.slice(i,i+2);
+      if(OPERATORS[two]){tokens.push({category:'OPERATOR',type:OPERATORS[two],value:two,line:lineNum});i+=2;continue;}
+      if(OPERATORS[line[i]]){tokens.push({category:'OPERATOR',type:OPERATORS[line[i]],value:line[i],line:lineNum});i++;continue;}
+      if(SEPARATORS[line[i]]){tokens.push({category:'SEPARATOR',type:SEPARATORS[line[i]],value:line[i],line:lineNum});i++;continue;}
+      i++;
+    }
+  }
+  return tokens;
+}
+
+function tokenizeWithMultilineComments(source) {
+  const commentTokens=[];
+  let processed='',i=0,lineNum=1;
+  while(i<source.length){
+    if(source[i]==='/'&&source[i+1]==='*'){
+      let start=lineNum,j=i+2;
+      while(j<source.length-1&&!(source[j]==='*'&&source[j+1]==='/')){
+        if(source[j]==='\n')lineNum++;j++;
+      }
+      commentTokens.push({category:'COMMENT',type:'COMMENT',value:source.slice(i,j+2),line:start});
+      for(let k=i;k<=j+1;k++)processed+=source[k]==='\n'?'\n':' ';
+      i=j+2;
+    }else{processed+=source[i];if(source[i]==='\n')lineNum++;i++;}
+  }
+  const tokens=tokenize(processed);
+  return [...tokens,...commentTokens].sort((a,b)=>a.line-b.line);
+}
+
+function buildStats(tokens, source) {
+  const lines=source.split('\n');
+  const totalLines=lines.length;
+  const codeLines=lines.filter(l=>l.trim().length>0).length;
+  const typeMap={};
+  tokens.forEach(t=>{
+    if(!typeMap[t.type])typeMap[t.type]={category:t.category,count:0,lines:new Set()};
+    typeMap[t.type].count++;typeMap[t.type].lines.add(t.line);
+  });
+  const lineTokens={};
+  tokens.forEach(t=>{if(!lineTokens[t.line])lineTokens[t.line]=0;lineTokens[t.line]++;});
+  const identMap={};
+  tokens.filter(t=>t.category==='IDENTIFIER').forEach(t=>{
+    if(!identMap[t.value])identMap[t.value]={count:0,lines:new Set()};
+    identMap[t.value].count++;identMap[t.value].lines.add(t.line);
+  });
+  const litMap={};
+  tokens.filter(t=>t.category==='LITERAL').forEach(t=>{
+    const k=t.value+'|'+t.type;
+    if(!litMap[k])litMap[k]={value:t.value,type:t.type,count:0,lines:new Set()};
+    litMap[k].count++;litMap[k].lines.add(t.line);
+  });
+  const catTotals={};
+  tokens.forEach(t=>{catTotals[t.category]=(catTotals[t.category]||0)+1;});
+  const nonCommentTokens=tokens.filter(t=>t.category!=='COMMENT'&&t.category!=='WHITESPACE');
+  const total=nonCommentTokens.length;
+  const lineNums=Object.keys(lineTokens).map(Number);
+  const maxLine=lineNums.reduce((a,b)=>lineTokens[b]>lineTokens[a]?b:a,lineNums[0]);
+  const minLine=lineNums.reduce((a,b)=>lineTokens[b]<lineTokens[a]?b:a,lineNums[0]);
+  const typeCounts=Object.entries(typeMap).filter(([k,v])=>v.category!=='COMMENT');
+  const mostFreqType=typeCounts.reduce((a,b)=>b[1].count>a[1].count?b:a,typeCounts[0]);
+  const leastFreqType=typeCounts.reduce((a,b)=>b[1].count<a[1].count?b:a,typeCounts[0]);
+
+  const serializeTypeMap = {};
+  Object.entries(typeMap).forEach(([k,v])=>{serializeTypeMap[k]={category:v.category,count:v.count,lines:[...v.lines]};});
+  const serializeIdentMap = {};
+  Object.entries(identMap).forEach(([k,v])=>{serializeIdentMap[k]={count:v.count,lines:[...v.lines]};});
+  const serializeLitMap = {};
+  Object.entries(litMap).forEach(([k,v])=>{serializeLitMap[k]={value:v.value,type:v.type,count:v.count,lines:[...v.lines]};});
+
+  return {
+    tokens, total, totalLines, codeLines,
+    typeMap: serializeTypeMap,
+    lineTokens, identMap: serializeIdentMap, litMap: serializeLitMap, catTotals,
+    maxLine:{line:maxLine,count:lineTokens[maxLine]},
+    minLine:{line:minLine,count:lineTokens[minLine]},
+    mostFreqType:mostFreqType?{type:mostFreqType[0],count:mostFreqType[1].count}:null,
+    leastFreqType:leastFreqType?{type:leastFreqType[0],count:leastFreqType[1].count}:null,
+    avgPerLine:codeLines>0?(total/codeLines).toFixed(2):0
+  };
+}
+
+let currentFilename = 'input.wpp';
+
+const textarea = document.getElementById('codeInput');
+const charCount = document.getElementById('charCount');
+textarea.addEventListener('input', ()=>{
+  charCount.textContent = textarea.value.length.toLocaleString() + ' chars';
+});
+
+function analyze() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) { showError('⚠ Please enter some W++ code or upload a .wpp file first.'); return; }
+  hideError();
+  document.getElementById('loadingOverlay').classList.add('show');
+  setTimeout(()=>{
+    try {
+      const tokens = tokenizeWithMultilineComments(code);
+      if (!tokens.length) { hideLoading(); showError('⚠ No tokens found. Please check your input.'); return; }
+      const stats = buildStats(tokens, code);
+      localStorage.setItem('wpp_stats', JSON.stringify(stats));
+      localStorage.setItem('wpp_filename', currentFilename);
+      localStorage.setItem('wpp_source', code);
+      window.location.href = 'results.html';
+    } catch(e) {
+      hideLoading();
+      showError('⚠ Error during tokenization: ' + e.message);
+    }
+  }, 300);
+}
+
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+function clearAll() {
+  document.getElementById('codeInput').value = '';
+  charCount.textContent = '0 chars';
+  currentFilename = 'input.wpp';
+  hideError();
+  removeFile();
+  localStorage.removeItem('wpp_stats');
+  localStorage.removeItem('wpp_filename');
+  localStorage.removeItem('wpp_source');
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+
+function removeFile() {
+  currentFilename = 'input.wpp';
+  document.getElementById('fileBadge').classList.remove('show');
+  document.getElementById('fileInput').value = '';
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  currentFilename = file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('codeInput').value = ev.target.result;
+    charCount.textContent = ev.target.result.length.toLocaleString() + ' chars';
+    document.getElementById('fileNameLabel').textContent = file.name;
+    document.getElementById('fileBadge').classList.add('show');
+  };
+  reader.readAsText(file);
+});
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    currentFilename = file.name;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('codeInput').value = ev.target.result;
+      charCount.textContent = ev.target.result.length.toLocaleString() + ' chars';
+      document.getElementById('fileNameLabel').textContent = file.name;
+      document.getElementById('fileBadge').classList.add('show');
+    };
+    reader.readAsText(file);
+  }
+});
+
+function loadSample() {
+  currentFilename = 'sample.wpp';
+  const sample = `// W++ Token Analyzer Test Program
+/* This program demonstrates all token types */
+int main() {
+    int age = 25;
+    float temperature = 36.6;
+    double pi = 3.14159265359;
+    char grade = 'A';
+    string name = "John Doe";
+    int x = 10, y = 20, z = 30;
+    float a = 1.5, b = 2.5;
+    int sum = x + y + z;
+    float product = a * b;
+    int remainder = 100 % 7;
+    if (age >= 18 && age <= 60) {
+        print "Adult age range";
+        string status = "Working";
+    } else {
+        print "Other";
+    }
+    int counter = 0;
+    while (counter < 10) {
+        counter = counter + 1;
+        print counter;
+    }
+    for (int i = 0; i < 5; i = i + 1) {
+        print "Iteration: ";
+        print i;
+    }
+    bool flag = true;
+    bool result = (x > y) && (a < b);
+    char newline = '\\n';
+    string greeting = "Hello, " + name + "!";
+    return 0;
+}`;
+  document.getElementById('codeInput').value = sample;
+  charCount.textContent = sample.length.toLocaleString() + ' chars';
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+</script>
+</body>
+</html>
